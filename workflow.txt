@@ -1,0 +1,14 @@
+AntiSpoofing_System/
+│
+├── dataset/                     # [YOU MUST CREATE THIS MANUALLY]
+│   ├── live/                    # Put UTKFace, MeGlass, FEI images here
+│   └── spoof/                   # Put Roboflow, HF Monitors images here
+│
+├── weights/                     # Folder to save trained models
+│
+├── models.py                    # Neural Network Definitions
+├── dataset_loader.py            # Data Processing & Synthetic Generation
+├── train.py                     # Training Script
+├── inference.py                 # Real-time Webcam Script
+└── requirements.txt             # Dependencies
+https://www.kaggle.com/datasets/trainingdatapro/antispoofing-replay-dataset

@@ -1,0 +1,81 @@
+┌─────────────────────────────────────────┐
+│ INPUT SOURCE                            │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
+│ Device: Webcam / IP Camera              │
+│ Input:  RGB Stream (30 FPS)             │
+│ Size:   Resized to 224×224              │
+└──────────────┬──────────────────────────┘
+               ↓
+┌──────────────────────────────────────────┐
+│ PRE-PROCESSING (inference.py)            │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
+│ 1. Face Detection (Haar Cascade)         │
+│ 2. ROI Extraction (Face Crop)            │
+│ 3. Buffer: Store last 16 frames          │
+└──────────────┬──────────────────────────┘
+               ↓
+┌──────────────────────────────────────────┐
+│ STAGE 1: Fast Screening (The Gatekeeper) │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
+│ Script: models.py (FastScreenNet)        │
+│ Input:  Single Frame (Resized 128×128)   │
+│ Logic:                                   │
+│  • Step A: Laplacian Var < 50? -> FAIL   │
+│            (Rejects Motion Blur)         │
+│  • Step B: MobileNetV3 Check             │
+│ Dataset Used for Training:               │
+│  • Live: UTKFace                         │
+│  • Spoof: Roboflow (Blurry/Low Quality)  │
+│ Speed:  ~3ms                             │
+└──────────────┬──────────────────────────┘
+               ↓
+        ┌──────┴───────┐
+        │ Score > 95%? │
+        └──────┬───────┘
+        ┌──────┴────────┐
+    YES │               │ NO (Ambiguous)
+        ↓               ↓
+   ┌─────────┐   ┌──────────────────────────┐
+   │  PASS   │   │ STAGE 2: Forensic Expert │
+   │ (Instant│   │ ━━━━━━━━━━━━━━━━━━━━━━━ │
+   │  Allow) │   │ Script: models.py (ForensicNet)
+   └─────────┘   │ Input:  224×224 + FFT      │
+                 │ Architecture:              │
+                 │  • Branch A: EfficientNet  │
+                 │    (Spatial Texture)       │
+                 │  • Branch B: FFT Conv2D    │
+                 │    (Frequency Moiré check) │
+                 │ Dataset Used for Training: │
+                 │  • Live: MeGlass (Glasses) │
+                 │          + UTKFace         │
+                 │  • Spoof: HF Monitors      │
+                 │          + Synthetic Prints│
+                 │ Output: [Live vs Spoof]    │
+                 └──────────┬────────────────┘
+                            ↓
+                     ┌──────┴───────┐
+                     │ Score > 50%? │
+                     │ (Is Live?)   │
+                     └──────┬───────┘
+                     ┌──────┴────────┐
+                 YES │               │ NO
+                     ↓               ↓
+          ┌────────────────┐   ┌──────────┐
+          │ STAGE 3:       │   │  FAIL    │
+          │ Temporal Check │   │ (Attack) │
+          │ ━━━━━━━━━━━━━━ │   └──────────┘
+          │ Logic: Frame   │
+          │ Buffer Check   │
+          │ Input: 16 frms │
+          │ Check:         │
+          │  • Motion > 0? │
+          │    (Reject     │
+          │     Static     │
+          │     Photos)    │
+          └────────┬───────┘
+                   ↓
+          ┌────────────────┐
+          │ FINAL DECISION │
+          │ (Draw Box:     │
+          │  Green/Red)    │
+          └────────────────┘

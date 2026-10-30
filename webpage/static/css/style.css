@@ -1,0 +1,547 @@
+:root {
+    /* Color Palette */
+    --primary-green: #2E7D32;
+    --dark-green: #1B5E20;
+    --light-green: #A5D6A7;
+    --mint: #E8F5E9;
+    --white: #FFFFFF;
+    --text-dark: #263238;
+    --text-light: #FFFFFF;
+
+    /* Shadows & Effects */
+    --shadow-soft: 0px 4px 12px rgba(0, 0, 0, 0.08);
+    --hover-lift: translateY(-2px);
+    --border-radius-card: 16px;
+    --border-radius-pill: 50px;
+    --border-radius-input: 12px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, var(--white), var(--mint));
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Bubble Background Elements */
+.bubble-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    /* Changed from -1 to 0 to sit above body background but below container */
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.bubble {
+    position: absolute;
+    bottom: -100px;
+    background-color: var(--light-green);
+    /* Changed from mint to light-green */
+    border-radius: 50%;
+    opacity: 0.4;
+    /* Increased from 0.25 */
+    filter: blur(10px);
+    /* Reduced blur for more definition */
+    animation: floatUp 15s infinite ease-in-out;
+    box-shadow: 0 0 20px var(--primary-green);
+    /* Added glow */
+}
+
+.bubble:nth-child(1) {
+    width: 80px;
+    height: 80px;
+    left: 10%;
+    animation-duration: 12s;
+    background-color: var(--primary-green);
+    opacity: 0.15;
+}
+
+.bubble:nth-child(2) {
+    width: 120px;
+    height: 120px;
+    left: 20%;
+    animation-duration: 18s;
+    animation-delay: 2s;
+    background-color: var(--light-green);
+}
+
+.bubble:nth-child(3) {
+    width: 60px;
+    height: 60px;
+    left: 35%;
+    animation-duration: 15s;
+    animation-delay: 5s;
+    background-color: var(--dark-green);
+    opacity: 0.1;
+}
+
+.bubble:nth-child(4) {
+    width: 150px;
+    height: 150px;
+    left: 50%;
+    animation-duration: 20s;
+    background-color: var(--light-green);
+}
+
+.bubble:nth-child(5) {
+    width: 90px;
+    height: 90px;
+    left: 65%;
+    animation-duration: 14s;
+    animation-delay: 1s;
+    background-color: var(--primary-green);
+    opacity: 0.15;
+}
+
+.bubble:nth-child(6) {
+    width: 110px;
+    height: 110px;
+    left: 80%;
+    animation-duration: 16s;
+    animation-delay: 3s;
+    background-color: var(--mint);
+    opacity: 0.6;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: translateY(-120vh) scale(1.2);
+        opacity: 0;
+    }
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+h1 {
+    color: var(--primary-green);
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 40px;
+}
+
+h2 {
+    color: var(--primary-green);
+    margin-top: 0;
+    font-weight: 600;
+}
+
+h3 {
+    color: var(--dark-green);
+}
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 30px;
+    /* Increased spacing */
+}
+
+/* Card Style */
+.camera-section,
+.results-section {
+    background: var(--white);
+    padding: 30px;
+    border-radius: var(--border-radius-card);
+    border: 1px solid var(--mint);
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.camera-section:hover,
+.results-section:hover {
+    transform: translateY(-5px);
+    /* Lift effect */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.camera-section {
+    text-align: center;
+}
+
+video {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+    background: #000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+/* Button Formatting */
+button {
+    background: var(--primary-green);
+    color: var(--white);
+    border: none;
+    padding: 12px 28px;
+    font-size: 16px;
+    border-radius: var(--border-radius-pill);
+    cursor: pointer;
+    margin-top: 20px;
+    font-weight: 600;
+    transition: background 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 6px rgba(46, 125, 50, 0.2);
+}
+
+button:hover:not(:disabled) {
+    background: var(--dark-green);
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    background: #bdc3c7;
+    /* Light grey for disabled */
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Inputs */
+input[type="file"] {
+    display: none;
+}
+
+/* Drop Zone */
+#dropZone {
+    border: 2px dashed var(--light-green);
+    border-radius: var(--border-radius-input);
+    padding: 40px 20px;
+    background: #fafafa;
+    transition: all 0.3s ease;
+    color: var(--text-dark);
+}
+
+#dropZone:hover {
+    border-color: var(--primary-green);
+    background: var(--mint);
+}
+
+.status-box {
+    margin-top: 15px;
+    font-size: 1.1em;
+    min-height: 1.5em;
+    color: var(--text-dark);
+}
+
+.verdict-box {
+    font-size: 2em;
+    font-weight: 700;
+    margin-bottom: 25px;
+    text-align: center;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pass {
+    background-color: #E8F5E9;
+    /* Mint */
+    color: #1B5E20;
+    /* Dark Green */
+    border: 1px solid #C8E6C9;
+}
+
+.fail {
+    background-color: #ffebee;
+    /* Light Red */
+    color: #b71c1c;
+    /* Dark Red */
+    border: 1px solid #ffcdd2;
+}
+
+.uncertain {
+    background-color: #fff8e1;
+    /* Light Amber */
+    color: #ff6f00;
+    /* Dark Amber */
+    border: 1px solid #ffecb3;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.metric-card {
+    background: #fafafa;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #f0f0f0;
+}
+
+.metric-val {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: var(--primary-green);
+    margin-top: 5px;
+}
+
+.gallery {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.gallery img {
+    max-width: 45%;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #eee;
+}
+
+pre {
+    background: #263238;
+    /* Dark mainly for code readability */
+    color: #eceff1;
+    padding: 20px;
+    overflow-x: auto;
+    border-radius: 12px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+}
+
+/* Footer-like elements */
+.footer-text {
+    text-align: center;
+    margin-top: 50px;
+    color: var(--primary-green);
+    font-size: 0.9em;
+}
+
+.payment-workflow {
+    max-width: 900px;
+    margin: 0 auto 30px;
+    padding: 28px;
+    position: relative;
+    z-index: 1;
+    background: var(--white);
+    border: 1px solid var(--mint);
+    border-radius: var(--border-radius-card);
+    box-shadow: var(--shadow-soft);
+}
+
+.payment-workflow h2 {
+    margin-top: 24px;
+}
+
+.flow-steps {
+    display: flex;
+    gap: 12px;
+    padding: 0;
+    margin: 24px 0;
+    list-style: none;
+}
+
+.flow-steps li {
+    flex: 1;
+    padding: 10px;
+    border-bottom: 3px solid #dfe6e2;
+    color: #68756e;
+    text-align: center;
+    font-weight: 600;
+}
+
+.flow-steps li.active {
+    border-color: var(--primary-green);
+    color: var(--dark-green);
+}
+
+.flow-steps li.complete {
+    border-color: var(--light-green);
+}
+
+.payment-form {
+    display: grid;
+    gap: 10px;
+    max-width: 440px;
+}
+
+.payment-form label {
+    margin-top: 8px;
+    font-weight: 600;
+}
+
+.payment-form input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5ce;
+    border-radius: var(--border-radius-input);
+    font: inherit;
+}
+
+.amount-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.amount-field span {
+    font-size: 1.2em;
+}
+
+.payment-form button,
+.face-step button {
+    justify-self: start;
+}
+
+.face-step {
+    max-width: 650px;
+    line-height: 1.6;
+}
+
+.payment-decision {
+    margin-top: 20px;
+    padding: 18px;
+    border: 1px solid #dfe6e2;
+    border-radius: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.payment-decision p {
+    margin-top: 0;
+}
+
+.payment-review {
+    margin-top: 20px;
+    padding: 18px;
+    border: 1px solid var(--mint);
+    border-radius: 12px;
+    background: #fafdfa;
+    line-height: 1.5;
+}
+
+.payment-review h3 {
+    margin-top: 0;
+}
+
+.payment-receipt {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px;
+    border: 1px solid #dfe6e2;
+    border-radius: 12px;
+    background: var(--white);
+}
+
+.payment-receipt h3 {
+    text-align: center;
+}
+
+.receipt-label {
+    color: #68756e;
+    font-size: 0.8em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-align: center;
+}
+
+.receipt-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 18px 0;
+    border-bottom: 1px solid #dfe6e2;
+}
+
+.receipt-total strong {
+    color: var(--dark-green);
+    font-size: 1.6em;
+}
+
+.payment-receipt dl {
+    margin: 0 0 12px;
+}
+
+.payment-receipt dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #eef2ef;
+}
+
+.payment-receipt dt {
+    color: #68756e;
+}
+
+.payment-receipt dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media print {
+    body {
+        background: #fff;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    #paymentReceipt,
+    #paymentReceipt * {
+        visibility: visible;
+    }
+
+    #paymentReceipt {
+        position: absolute;
+        inset: 0;
+        max-width: none;
+        border: 0;
+        color: #000;
+        box-shadow: none;
+    }
+
+    #printReceiptBtn {
+        display: none;
+    }
+}
+
+@media (max-width: 700px) {
+    .payment-workflow {
+        padding: 18px;
+    }
+
+    .flow-steps {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .flow-steps li {
+        text-align: left;
+    }
+}

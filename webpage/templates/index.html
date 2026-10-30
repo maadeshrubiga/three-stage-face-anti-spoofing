@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Authentication Payment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="bubble-container">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+    <div class="container">
+        <h1>Face Authentication Payment</h1>
+
+        <section class="payment-workflow" aria-labelledby="payment-title">
+            <h2 id="payment-title">Payment flow (simulation)</h2>
+            <ol class="flow-steps" aria-label="Payment authentication steps">
+                <li id="step-payment" class="active">Payment details</li>
+                <li id="step-pin">Test PIN</li>
+                <li id="step-face">Face liveness</li>
+                <li id="step-review">Payment review</li>
+                <li id="step-complete">Simulation complete</li>
+            </ol>
+
+            <form id="paymentForm" class="payment-form">
+                <label for="receiver">Receiver</label>
+                <input id="receiver" name="receiver" type="text" maxlength="80" required
+                    placeholder="Receiver name">
+                <label for="amount">Amount</label>
+                <div class="amount-field">
+                    <span aria-hidden="true">₹</span>
+                    <input id="amount" name="amount" type="number" min="1" max="1000000" step="0.01" required
+                        placeholder="0.00">
+                </div>
+                <button type="submit">Continue</button>
+            </form>
+
+            <form id="pinForm" class="payment-form" hidden>
+                <p>Confirm the payment details: <strong id="paymentSummary"></strong></p>
+                <label for="flowPin">Test PIN (4–6 digits; not sent or stored)</label>
+                <input id="flowPin" name="flowPin" type="password" inputmode="numeric" autocomplete="off"
+                    pattern="[0-9]{4,6}" minlength="4" maxlength="6" required placeholder="Enter a fake PIN">
+                <button type="submit">Continue to face check</button>
+            </form>
+
+            <div id="faceStep" class="face-step" hidden>
+                <p>Capture a face photo followed by a short camera clip for the existing anti-spoofing model. The model checks liveness only;
+                    account-owner face recognition is not implemented.</p>
+                <button id="paymentFaceBtn" type="button" onclick="runPaymentFaceCheck()">
+                    Capture Face Photo + Video
+                </button>
+                <div id="paymentFaceStatus" class="status-box" role="status" aria-live="polite">
+                    Camera permission is required to continue.
+                </div>
+            </div>
+
+            <div id="paymentDecision" class="payment-decision" role="status" aria-live="polite" hidden>
+                <p id="paymentDecisionMessage"></p>
+                <button id="paymentNextBtn" type="button" onclick="showPaymentReview()" hidden>
+                    Continue to payment review
+                </button>
+            </div>
+
+            <div id="paymentReview" class="payment-review" hidden>
+                <div id="paymentReviewDetails">
+                    <h3>Review payment</h3>
+                    <p id="paymentReviewSummary"></p>
+                    <p>This is a simulation only. Selecting the button will not contact a bank or move money.</p>
+                    <button type="button" onclick="completePaymentSimulation()">Complete payment simulation</button>
+                </div>
+                <section id="paymentReceipt" class="payment-receipt" aria-labelledby="receiptTitle" hidden>
+                    <p class="receipt-label">SIMULATION RECEIPT · NOT A BANK TRANSACTION</p>
+                    <h3 id="receiptTitle">Payment receipt</h3>
+                    <div class="receipt-total">
+                        <span>Amount</span>
+                        <strong id="receiptAmount"></strong>
+                    </div>
+                    <dl>
+                        <div><dt>Paid to</dt><dd id="receiptReceiver"></dd></div>
+                        <div><dt>Date</dt><dd id="receiptDate"></dd></div>
+                        <div><dt>Receipt reference</dt><dd id="receiptReference"></dd></div>
+                        <div><dt>Status</dt><dd>Simulation completed</dd></div>
+                    </dl>
+                    <button id="printReceiptBtn" type="button" onclick="window.print()">Print / Save receipt</button>
+                </section>
+            </div>
+        </section>
+
+        <div class="main-grid">
+            <!-- Camera Section -->
+            <div class="camera-section">
+                <h2>Face Capture Camera</h2>
+                <video id="webcam" autoplay playsinline></video>
+                <div id="status" class="status-box">Ready</div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                    <button id="startBtn" onclick="startCapture()">Analyze Camera (60 Frames)</button>
+                    <button id="liveBtn" onclick="toggleLive()" style="background-color: #2e8bc0; color: white;">Start Live Mode</button>
+                </div>
+                <div style="font-size: 0.8em; color: #888; margin-top: 10px;">Requires Camera Access</div>
+            </div>
+
+            <!-- Video Upload Section -->
+            <div class="camera-section">
+                <div class="camera-section">
+                    <h2>Upload Video</h2>
+                    <div id="dropZoneContainer">
+                        <input type="file" id="videoInput" accept=".mp4,.avi,.mov,.mkv,.webm,video/*"
+                            style="display: none;">
+                        <div id="dropZone" role="button" tabindex="0" aria-label="Choose a video file or drop one here"
+                            style="cursor: pointer;">
+                            <div style="font-size: 3em; margin-bottom: 10px;">📁</div>
+                            <div id="selectedFileName">Click to select or drag a video file</div>
+                            <div style="font-size: 0.8em; color: #888; margin-top: 10px;">Supported: MP4, AVI, MOV, MKV,
+                                WebM</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="videoStatus" class="status-box">No video selected</div>
+                <button id="uploadBtn" onclick="uploadVideo()" disabled>Analyze Video</button>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsArea" style="opacity: 0.5; pointer-events: none;">
+                <div id="verdict" class="verdict-box uncertain">WAITING FOR DATA</div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div>Blur Score (Avg)</div>
+                        <div class="metric-val" id="score-blur">--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div>FFT Ratio (Avg)</div>
+                        <div class="metric-val" id="score-fft">--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div>Confidence</div>
+                        <div class="metric-val" id="score-conf">--</div>
+                    </div>
+                </div>
+
+                <div class="gallery">
+                    <div style="text-align: center;">
+                        <p>Sample Frame</p>
+                        <img id="img-sample" src="" alt="Sample" style="display:none;">
+                    </div>
+                    <div style="text-align: center;">
+                        <p>FFT Spectrum</p>
+                        <img id="img-fft" src="" alt="FFT" style="display:none;">
+                    </div>
+                </div>
+
+                <h3>Full Report</h3>
+                <pre id="report-text">Waiting for analysis...</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Canvas for Capture -->
+    <canvas id="captureCanvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById('webcam');
+        const startBtn = document.getElementById('startBtn');
+        const statusDiv = document.getElementById('status');
+        const resultsArea = document.getElementById('resultsArea');
+        const canvas = document.getElementById('captureCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let stream = null;
+        let isLive = false;
+        let isProcessingLive = false;
+        let paymentDetails = null;
+
+        const paymentForm = document.getElementById('paymentForm');
+        const pinForm = document.getElementById('pinForm');
+        const faceStep = document.getElementById('faceStep');
+        const paymentFaceBtn = document.getElementById('paymentFaceBtn');
+        const paymentFaceStatus = document.getElementById('paymentFaceStatus');
+        const paymentDecision = document.getElementById('paymentDecision');
+        const paymentReview = document.getElementById('paymentReview');
+        const paymentNextBtn = document.getElementById('paymentNextBtn');
+
+        paymentForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            if (!paymentForm.reportValidity()) return;
+
+            const amount = Number(document.getElementById('amount').value);
+            const receiver = document.getElementById('receiver').value.trim();
+            if (!Number.isFinite(amount) || amount <= 0 || !receiver) return;
+
+            paymentDetails = { amount: amount.toFixed(2), receiver };
+            document.getElementById('paymentSummary').textContent =
+                `₹${paymentDetails.amount} to ${paymentDetails.receiver}`;
+            paymentForm.hidden = true;
+            pinForm.hidden = false;
+            setPaymentStep('step-pin');
+            document.getElementById('flowPin').focus();
+        });
+
+        pinForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const pinInput = document.getElementById('flowPin');
+            if (!pinForm.reportValidity() || !/^\d{4,6}$/.test(pinInput.value)) return;
+
+            pinInput.value = '';
+            pinForm.hidden = true;
+            faceStep.hidden = false;
+            setPaymentStep('step-face');
+            paymentFaceStatus.innerText = stream
+                ? 'Ready. Center your face and capture the liveness sample.'
+                : 'Camera is unavailable. Allow camera access and reload to continue.';
+        });
+
+        function setPaymentStep(activeStep) {
+            document.querySelectorAll('.flow-steps li').forEach(step => {
+                step.classList.toggle('active', step.id === activeStep);
+                if (step.id !== activeStep) step.classList.remove('complete');
+            });
+            const active = document.getElementById(activeStep);
+            let previous = active.previousElementSibling;
+            while (previous) {
+                previous.classList.add('complete');
+                previous = previous.previousElementSibling;
+            }
+        }
+
+        async function runPaymentFaceCheck() {
+            if (!paymentDetails || !stream || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+                paymentFaceStatus.innerText = 'Payment details or camera are not ready. Check camera permission and try again.';
+                return;
+            }
+
+            paymentFaceBtn.disabled = true;
+            paymentFaceStatus.innerText = 'Capturing a face photo and short video...';
+            const frames = [];
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            try {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                frames.push(canvas.toDataURL('image/jpeg', 0.7));
+                for (let i = 0; i < 30; i++) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    frames.push(canvas.toDataURL('image/jpeg', 0.7));
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                paymentFaceStatus.innerText = 'Running the liveness model...';
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frames })
+                });
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success') {
+                    throw new Error(data.error || `Analysis failed (HTTP ${response.status})`);
+                }
+
+                showResults(data.report);
+                showPaymentDecision(data.report);
+            } catch (error) {
+                paymentFaceStatus.innerText = `Face check failed: ${error.message}`;
+                paymentDecision.hidden = false;
+                paymentDecision.className = 'payment-decision fail';
+                document.getElementById('paymentDecisionMessage').textContent =
+                    'Unable to verify. No payment was sent.';
+                paymentNextBtn.hidden = true;
+            } finally {
+                paymentFaceBtn.disabled = false;
+            }
+        }
+
+        function showPaymentDecision(report) {
+            paymentDecision.hidden = false;
+            paymentDecision.className = 'payment-decision';
+            if (report.verdict && report.verdict.includes('LIVE')) {
+                paymentDecision.classList.add('pass');
+                document.getElementById('paymentDecisionMessage').textContent =
+                    'LIVENESS CHECK PASSED — account-owner match is not implemented. You may continue to payment review.';
+                paymentNextBtn.hidden = false;
+            } else if (report.verdict && report.verdict.includes('SPOOF')) {
+                paymentDecision.classList.add('fail');
+                document.getElementById('paymentDecisionMessage').textContent =
+                    'REJECTED — liveness check failed. You cannot continue to payment review.';
+                paymentNextBtn.hidden = true;
+            } else {
+                paymentDecision.classList.add('uncertain');
+                document.getElementById('paymentDecisionMessage').textContent =
+                    'UNABLE TO VERIFY — the result was inconclusive. You cannot continue to payment review.';
+                paymentNextBtn.hidden = true;
+            }
+            paymentFaceStatus.innerText = `Liveness model result: ${report.verdict || 'Unknown'}`;
+            setPaymentStep('step-face');
+        }
+
+        function showPaymentReview() {
+            if (!paymentDetails || paymentNextBtn.hidden) return;
+            paymentReview.hidden = false;
+            document.getElementById('paymentReviewSummary').textContent =
+                `Amount: ₹${paymentDetails.amount} · Receiver: ${paymentDetails.receiver}`;
+            setPaymentStep('step-review');
+            paymentReview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function completePaymentSimulation() {
+            if (!paymentDetails || paymentReview.hidden) return;
+            const completedAt = new Date();
+            document.getElementById('receiptAmount').textContent =
+                new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(paymentDetails.amount));
+            document.getElementById('receiptReceiver').textContent = paymentDetails.receiver;
+            document.getElementById('receiptDate').textContent = completedAt.toLocaleString();
+            document.getElementById('receiptReference').textContent = `SIM-${completedAt.getTime()}`;
+            document.getElementById('paymentReviewDetails').hidden = true;
+            document.getElementById('paymentReceipt').hidden = false;
+            setPaymentStep('step-complete');
+            document.getElementById('paymentReceipt').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function toggleLive() {
+            if (!stream) {
+                alert("Camera not initialized yet.");
+                return;
+            }
+            isLive = !isLive;
+            const liveBtn = document.getElementById('liveBtn');
+            
+            if (isLive) {
+                liveBtn.innerText = "Stop Live Mode";
+                liveBtn.style.backgroundColor = "#e74c3c";
+                startBtn.disabled = true;
+                resultsArea.style.opacity = "1";
+                resultsArea.style.pointerEvents = "auto";
+                statusDiv.innerText = "Live Mode Active...";
+                processLiveFrame();
+            } else {
+                liveBtn.innerText = "Start Live Mode";
+                liveBtn.style.backgroundColor = "#2e8bc0";
+                startBtn.disabled = false;
+                statusDiv.innerText = "Live Mode Stopped.";
+            }
+        }
+
+        async function processLiveFrame() {
+            if (!isLive) return;
+            if (isProcessingLive) return;
+
+            isProcessingLive = true;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frameBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frames: [frameBase64] })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showResults(data.report);
+                    if (isLive) {
+                        statusDiv.innerText = "Live Mode Active...";
+                    }
+                }
+            } catch (e) {
+                console.error("Live processing error:", e);
+                statusDiv.innerText = "Live Mode Error: " + e.message;
+            } finally {
+                isProcessingLive = false;
+                if (isLive) {
+                    setTimeout(processLiveFrame, 500); // Process next frame
+                }
+            }
+        }
+
+        // Init Camera
+        async function initCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } });
+                video.srcObject = stream;
+            } catch (e) {
+                statusDiv.innerText = "Error accessing camera: " + e.message;
+                statusDiv.style.color = "red";
+            }
+        }
+        initCamera();
+
+        async function startCapture() {
+            if (!stream) return;
+
+            startBtn.disabled = true;
+            statusDiv.innerText = "Capturing 60 frames...";
+            resultsArea.style.opacity = "0.5";
+
+            const frames = [];
+            const maxFrames = 60;
+            const interval = 33; // ~30 FPS
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            let count = 0;
+            const captureInterval = setInterval(() => {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                // Get Base64
+                frames.push(canvas.toDataURL('image/jpeg', 0.8)); // 0.8 quality to reduce size
+
+                count++;
+                statusDiv.innerText = `Capturing... ${count}/${maxFrames}`;
+
+                if (count >= maxFrames) {
+                    clearInterval(captureInterval);
+                    sendData(frames);
+                }
+            }, interval);
+        }
+
+        async function sendData(frames) {
+            statusDiv.innerText = "Processing on server... Please wait.";
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frames: frames })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showResults(data.report);
+                } else {
+                    statusDiv.innerText = "Analysis Failed: " + (data.error || "Unknown Error");
+                }
+            } catch (e) {
+                statusDiv.innerText = "Network Error: " + e.message;
+                console.error(e);
+            } finally {
+                startBtn.disabled = false;
+            }
+        }
+
+        function showResults(report) {
+            if (!isLive) {
+                statusDiv.innerText = "Analysis Complete.";
+            }
+            resultsArea.style.opacity = "1";
+            resultsArea.style.pointerEvents = "auto";
+
+            // Update Verdict
+            const vBox = document.getElementById('verdict');
+            vBox.innerText = report.verdict;
+            vBox.className = "verdict-box " + (
+                report.verdict.includes("LIVE") ? "pass" :
+                    report.verdict.includes("SPOOF") ? "fail" : "uncertain"
+            );
+
+            // Metrics
+            document.getElementById('score-blur').innerText = report.metrics.avg_blur;
+            document.getElementById('score-fft').innerText = report.metrics.avg_fft_ratio;
+            document.getElementById('score-conf').innerText = report.confidence;
+
+            // Images
+            if (report.images) {
+                const ts = new Date().getTime();
+                if (report.images.sample) {
+                    const img = document.getElementById('img-sample');
+                    img.src = "/reports/" + report.images.sample + "?t=" + ts;
+                    img.style.display = "block";
+                }
+                if (report.images.fft) {
+                    const img = document.getElementById('img-fft');
+                    img.src = "/reports/" + report.images.fft + "?t=" + ts;
+                    img.style.display = "block";
+                }
+            }
+
+            // Text Report
+            fetch("/reports/" + report.id + ".txt?t=" + new Date().getTime())
+                .then(r => r.text())
+                .then(text => {
+                    document.getElementById('report-text').innerText = text;
+                });
+        }
+
+        // ========== VIDEO UPLOAD FUNCTIONALITY ==========
+        const videoInput = document.getElementById('videoInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const videoStatus = document.getElementById('videoStatus');
+        const selectedFileName = document.getElementById('selectedFileName');
+        const dropZone = document.getElementById('dropZone');
+
+        let selectedVideoFile = null;
+
+        dropZone.addEventListener('click', function () {
+            videoInput.click();
+        });
+
+        dropZone.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                videoInput.click();
+            }
+        });
+
+        // Handle file selection
+        videoInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectVideoFile(file);
+            }
+        });
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropZone.style.borderColor = '#2E7D32';
+            dropZone.style.background = '#E8F5E9';
+        });
+
+        dropZone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            dropZone.style.borderColor = '#A5D6A7';
+            dropZone.style.background = '#fafafa';
+        });
+
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropZone.style.borderColor = '#A5D6A7';
+            dropZone.style.background = '#fafafa';
+
+            const file = e.dataTransfer.files[0];
+            if (file && (file.type.startsWith('video/') || /\.(mp4|avi|mov|mkv|webm)$/i.test(file.name))) {
+                selectVideoFile(file);
+            } else {
+                videoStatus.innerText = 'Please drop a valid video file';
+                videoStatus.style.color = '#ff6b6b';
+            }
+        });
+
+        function selectVideoFile(file) {
+            selectedVideoFile = file;
+            selectedFileName.innerText = file.name;
+            videoStatus.innerText = `Selected: ${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+            videoStatus.style.color = '#2E7D32';
+            uploadBtn.disabled = false;
+        }
+
+        async function uploadVideo() {
+            if (!selectedVideoFile) {
+                videoStatus.innerText = 'Please select a video file first';
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            videoStatus.innerText = 'Uploading and processing... Please wait.';
+            videoStatus.style.color = '#ffc107';
+            resultsArea.style.opacity = "0.5";
+
+            try {
+                const formData = new FormData();
+                formData.append('video', selectedVideoFile);
+
+                const response = await fetch('/analyze_video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    videoStatus.innerText = 'Analysis Complete!';
+                    videoStatus.style.color = '#2E7D32';
+                    showResults(data.report);
+                } else {
+                    videoStatus.innerText = 'Analysis Failed: ' + (data.error || 'Unknown Error');
+                    videoStatus.style.color = '#b71c1c';
+                }
+            } catch (e) {
+                videoStatus.innerText = 'Network Error: ' + e.message;
+                videoStatus.style.color = '#b71c1c';
+                console.error(e);
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>
