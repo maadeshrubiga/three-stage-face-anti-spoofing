@@ -1,0 +1,41 @@
+Single Image Analysis Report
+============================
+Source Image: C:\Users\manos\Videos\Final Year\dataset\live\FEI\originalimages_part1\1-02.jpg
+Analysis Date: 2026-02-03 07:05:43
+
+1. Laplacian Blur Detection (Sharpness Check)
+--------------------------------------------
+Combined Blur Score: 70.53
+Scale Breakdown: [50.21, 60.18, 136.89]
+
+Explanation:
+  - This technique uses the Variance of Laplacian to measure image sharpness.
+  - Low scores (typically < 50-100) are considered BLURRY. This often happens in replay attacks
+    (out of focus) or low-quality printed spoofs to hide texture details.
+  - High scores (> 100) indicate a detailed, SHARP image, which is expected for genuine live faces.
+  - Note: Very high scores (> 1000) might indicate artificial sharpening or extreme noise.
+
+2. FFT Frequency Analysis (Artifact Check)
+------------------------------------------
+Spectral Ratio: 0.250214
+Moire/Noise Score: 0.000125
+
+Explanation:
+  - We analyze the image in the Frequency Domain (FFT) to find repeating patterns.
+  - Spectral Ratio: Measures the proportion of energy in high frequencies.
+    screen replay attacks often introduce pixel grid patterns (Moiré pattern),
+    which appear as high-frequency noise.
+  - Moire Score: A specific variance check in the high-frequency band.
+  - Thresholds: Ratios > 0.15 typically indicate potential spoofing artifacts (screens/prints).
+
+3. Automated Verdict & Type Classification
+------------------------------------------
+Predicted Type: LIKELY LIVE / BONA FIDE
+Confidence:     Medium
+
+Reasoning:
+  Image has natural frequency distribution and sufficient sharpness.
+  (Note: Somewhat high frequency content detected, but below spoof threshold. Likely texture details.)
+
+NOTE: This is a heuristic check and not a deep learning prediction.
+For high-accuracy results, please use the main deep learning model (inference files).

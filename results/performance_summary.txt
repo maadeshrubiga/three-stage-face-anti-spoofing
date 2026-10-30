@@ -1,0 +1,13 @@
+--- STAGE2 Training Summary ---
+Epochs: 10
+Best Validation Accuracy: 100.00%
+Final Validation Accuracy: 99.98%
+Precision: 1.0000
+Recall: 0.9999
+F1 Score: 0.9999
+
+Confusion Matrix:
+[[ 1109     1]
+ [    3 23575]]
+
+(See plots in results/plots/)

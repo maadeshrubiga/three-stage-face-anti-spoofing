@@ -1,0 +1,12 @@
+--- STAGE2 V3 DataParallel Training Summary ---
+Number of GPUs: 2
+Batch Size: 32
+Best Validation Accuracy: 99.68%
+Final Validation Accuracy: 98.79%
+Precision: 0.9983
+Recall: 0.9811
+F1 Score: 0.9897
+
+Confusion Matrix:
+[[ 9176    22]
+ [  251 13059]]

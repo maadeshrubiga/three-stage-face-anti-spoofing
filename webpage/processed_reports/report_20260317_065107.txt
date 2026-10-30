@@ -1,0 +1,13 @@
+Live Analysis Report: report_20260317_065107
+========================================
+Verdict: SPOOF DETECTED
+Confidence: 64.5%
+------------------------------
+Metrics (Avg of 60 frames):
+  - Blur Score: 30.61 (Target > 50)
+  - FFT Ratio: 0.2787 (Target < 0.35)
+  - Model S2 Score: 0.6841 (Target > 0.5)
+------------------------------
+Breakdown:
+  - Frames Processed: 60
+  - Stage 1 (Face) Avg: 0.0001

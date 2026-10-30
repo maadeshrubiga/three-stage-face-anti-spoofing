@@ -6,20 +6,20 @@ __pycache__/
 *.py[cod]
 
 dataset/
-weights/
-weights_1/
 *.pth
 *.pt
 *.onnx
-
-results/
-results_1/
-result_final/
-gradcam_frames/
-image_analysis/
-webpage/processed_reports/
 
 dataset.txt
 dataset_report_temp.txt
 dataset_stats*.txt
 liveness_results*.txt
+
+!weights/
+!weights/**/*.pth
+!weights_1/
+!weights_1/**/*.pth
+weights/stage1_last.pth
+weights/stage1_v3_last.pth
+weights_1/stage2_last.pth
+weights_1/stage2_v3_last.pth

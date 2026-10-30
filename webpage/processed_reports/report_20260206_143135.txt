@@ -1,0 +1,13 @@
+Live Analysis Report: report_20260206_143135
+========================================
+Verdict: UNCERTAIN
+Confidence: 0.0%
+------------------------------
+Metrics (Avg of 60 frames):
+  - Blur Score: 86.15 (Target > 50)
+  - FFT Ratio: 0.2882 (Target < 0.35)
+  - Model S2 Score: 0.0000 (Target > 0.5)
+------------------------------
+Breakdown:
+  - Frames Processed: 60
+  - Stage 1 (Face) Avg: 0.0000

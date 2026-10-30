@@ -1,0 +1,13 @@
+Live Analysis Report: report_20260325_103400_758729
+========================================
+Verdict: LIVE PERSON
+Confidence: 65.6%
+------------------------------
+Metrics (Avg of 1 frames):
+  - Blur Score: 997.54 (Target > 50)
+  - FFT Ratio: 0.2666 (Target < 0.35)
+  - Model S2 Score: 0.0302 (Target > 0.5)
+------------------------------
+Breakdown:
+  - Frames Processed: 1
+  - Stage 1 (Face) Avg: 0.0000 (Target > 0.85, < 0.10 is Spoof)
